@@ -1,0 +1,22 @@
+{
+  "name": "effect-demo",
+  "private": true,
+  "license": "MIT",
+  "author": "builtbystef",
+  "type": "module",
+  "scripts": {
+    "dev": "vp run -r --parallel dev",
+    "build": "vp run -r build",
+    "ci": "vp check && vp test && vp run -r build"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@12.15.0"
+}

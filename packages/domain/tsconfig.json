@@ -1,0 +1,13 @@
+{
+  // Shared between the Node server and the browser app, so it only gets the
+  // runtime-neutral ES libs. Consumers import the .ts sources directly.
+  "extends": "../../tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["ES2024"],
+    "types": [],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src"]
+}

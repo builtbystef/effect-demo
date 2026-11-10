@@ -1,0 +1,10 @@
+{
+  // Runs directly on Node's built-in type stripping, so nothing is emitted.
+  "extends": "../../tsconfig/node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src"]
+}

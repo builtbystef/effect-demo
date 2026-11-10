@@ -1,0 +1,58 @@
+packages:
+  - apps/*
+  - packages/*
+  - tools/*
+
+catalogMode: prefer
+
+catalog:
+  "@types/node": ^24
+  typescript: ^7.0.2
+  # Bump these two together. A split pair fails at startup. Dependabot misses
+  # the coupling through the npm: alias, so update both by hand.
+  vite: npm:@voidzero-dev/vite-plus-core@1.3.0
+  vite-plus: 1.3.0
+
+  # Effect: the core package plus its satellites share one version line.
+  effect: ^4.1.2
+  "@effect/platform-node": ^4.1.2
+  "@effect/atom-react": ^4.1.2
+
+  react: ^19.3.0
+  react-dom: ^19.3.0
+  "@types/react": ^19.3.0
+  "@types/react-dom": ^19.3.0
+  "@vitejs/plugin-react": ^6.2.1
+  tailwindcss: ^4.3.4
+  "@tailwindcss/vite": ^4.3.4
+overrides:
+  vite: "catalog:"
+peerDependencyRules:
+  allowAny:
+    - vite
+  allowedVersions:
+    vite: "*"
+
+# Supply-chain policy
+# New versions must be at least 4 days old before pnpm will resolve them.
+minimumReleaseAge: 5760
+
+# No dependency may run lifecycle (install/postinstall) scripts unless it is
+# explicitly reviewed and listed in allowBuilds. Install fails loudly instead
+# of silently skipping unreviewed build scripts.
+strictDepBuilds: true
+allowBuilds: {}
+
+# Transitive dependencies must come from trusted registries: no git or
+# tarball URLs below the direct-dependency level.
+blockExoticSubdeps: true
+
+# Refuse versions whose publisher trust level regressed (e.g. provenance
+# silently dropped between releases).
+trustPolicy: no-downgrade
+
+# Keep node_modules in sync with the lockfile before running scripts.
+verifyDepsBeforeRun: install
+
+# Fail install on an engines mismatch (Node version) instead of warning.
+engineStrict: true
