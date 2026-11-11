@@ -4,6 +4,7 @@ import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 import { Config, Effect, Layer } from "effect";
 import { HttpRouter } from "effect/http";
 import { HttpApiBuilder, HttpApiScalar } from "effect/http-api";
+import { DbLive } from "./Db.ts";
 import { TodoRepo } from "./TodoRepo.ts";
 
 const TodosHandlers = HttpApiBuilder.group(
@@ -19,7 +20,7 @@ const TodosHandlers = HttpApiBuilder.group(
       remove: ({ params }) => repo.remove(params.id),
     });
   }),
-).pipe(Layer.provide(TodoRepo.layerMemory));
+).pipe(Layer.provide(TodoRepo.layerSql.pipe(Layer.provide(DbLive))));
 
 const ApiRoutes = HttpApiBuilder.layer(TodosApi, {
   openapiPath: "/api/openapi.json",

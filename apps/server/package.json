@@ -10,6 +10,7 @@
   "dependencies": {
     "@app/domain": "workspace:*",
     "@effect/platform-node": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

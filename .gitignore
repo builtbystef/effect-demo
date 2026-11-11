@@ -12,6 +12,11 @@ coverage/
 .cache/
 .vite/
 
+# Local SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
 # Environment
 .env
 .env.*
