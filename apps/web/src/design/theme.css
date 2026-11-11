@@ -1,0 +1,396 @@
+/*
+ * Glass design system: tokens, materials and motion.
+ *
+ * Two surface families, following Apple's Liquid Glass guidance:
+ *
+ *   glass     The functional layer. Navigation, toolbars, floating controls,
+ *             toasts and popovers. Very translucent, refracts what's behind it,
+ *             catches a specular rim light. Use it for controls that float
+ *             above content, never for the content itself.
+ *
+ *   material  The content layer. Lists and cards. Frosted but mostly opaque
+ *             so text stays legible over whatever is behind it.
+ *
+ * Colour comes in two layers:
+ *
+ *   1. Palette   One primary hue ("tide", a deep teal) plus a pure neutral
+ *                scale from white to black. These never change with the colour
+ *                scheme, and they're the only colours that exist: Tailwind's
+ *                default palette is switched off below.
+ *   2. Semantic  What a colour is *for* (accent, label, fill, destructive…).
+ *                Each one points at a palette step and is remapped for dark
+ *                mode. Components only ever use these.
+ *
+ * Semantic tokens are exposed to Tailwind through `@theme inline`, so
+ * utilities like `bg-accent` or `text-label-2` follow the active scheme.
+ */
+
+/* ───────────────────────── Palette ───────────────────────── */
+
+@theme static {
+  --color-*: initial;
+
+  --color-white: oklch(1 0 0);
+  --color-black: oklch(0 0 0);
+
+  /* Primary: tide */
+  --color-tide-50: oklch(0.97 0.02 190);
+  --color-tide-100: oklch(0.93 0.04 190);
+  --color-tide-200: oklch(0.87 0.07 190);
+  --color-tide-300: oklch(0.78 0.1 190);
+  --color-tide-400: oklch(0.68 0.115 190);
+  --color-tide-500: oklch(0.58 0.11 190);
+  --color-tide-600: oklch(0.5 0.1 190);
+  --color-tide-700: oklch(0.43 0.085 190);
+  --color-tide-800: oklch(0.36 0.07 190);
+  --color-tide-900: oklch(0.29 0.05 190);
+
+  /* Neutrals: zero chroma, white → black */
+  --color-gray-25: oklch(0.985 0 0);
+  --color-gray-50: oklch(0.97 0 0);
+  --color-gray-100: oklch(0.945 0 0);
+  --color-gray-200: oklch(0.89 0 0);
+  --color-gray-300: oklch(0.82 0 0);
+  --color-gray-400: oklch(0.7 0 0);
+  --color-gray-500: oklch(0.58 0 0);
+  --color-gray-600: oklch(0.47 0 0);
+  --color-gray-700: oklch(0.37 0 0);
+  --color-gray-800: oklch(0.27 0 0);
+  --color-gray-850: oklch(0.22 0 0);
+  --color-gray-900: oklch(0.18 0 0);
+  --color-gray-950: oklch(0.13 0 0);
+}
+
+/* ───────────────────────── Semantic tokens: light ───────────────────────── */
+
+:root {
+  color-scheme: light dark;
+
+  /* Accent: the one colour. Interactive and selected things. */
+  --accent: var(--color-tide-600);
+  --accent-hover: var(--color-tide-700);
+  --accent-pressed: var(--color-tide-800);
+  --on-accent: var(--color-white);
+
+  /* Status, drawn from the same palette: success is the accent; destructive
+     is full-strength ink, so danger reads as weight rather than a new hue. */
+  --success: var(--accent);
+  --destructive: var(--color-gray-950);
+  --destructive-hover: var(--color-black);
+  --on-destructive: var(--color-white);
+
+  /* Labels: primary → quaternary. Alpha over black so they sit on any surface. */
+  --label: oklch(0 0 0 / 0.88);
+  --label-2: oklch(0 0 0 / 0.56);
+  --label-3: oklch(0 0 0 / 0.3);
+  --label-4: oklch(0 0 0 / 0.15);
+
+  /* Fills for controls sitting on a surface */
+  --fill: oklch(0 0 0 / 0.07);
+  --fill-2: oklch(0 0 0 / 0.045);
+  --separator: oklch(0 0 0 / 0.09);
+
+  /* App background */
+  --canvas: var(--color-gray-100);
+
+  /* Liquid glass */
+  --glass-tint: oklch(1 0 0 / 0.08);
+  --glass-tint-hover: oklch(1 0 0 / 0.2);
+  --glass-solid: oklch(0.97 0 0 / 0.97);
+  --glass-rim: oklch(1 0 0 / 0.95);
+  --glass-rim-dim: oklch(1 0 0 / 0.18);
+  --glass-highlight: oklch(1 0 0 / 0.7);
+  --glass-sheen: oklch(1 0 0 / 0.3);
+  --glass-inner-shade: oklch(0 0 0 / 0.035);
+  --glass-shadow: 0 12px 32px -12px oklch(0 0 0 / 0.22), 0 2px 6px -1px oklch(0 0 0 / 0.07);
+  --glass-blur: 6px;
+  --glass-saturate: 2.2;
+  --glass-brightness: 1.02;
+
+  /* Thumb: the opaque pill inside segmented controls */
+  --thumb: oklch(1 0 0 / 0.92);
+  --thumb-shadow: 0 3px 10px -2px oklch(0 0 0 / 0.14), 0 1px 2px oklch(0 0 0 / 0.07);
+
+  /* Content material */
+  --material: oklch(1 0 0 / 0.66);
+  --material-solid: oklch(1 0 0 / 0.98);
+  --material-rim: oklch(1 0 0 / 0.75);
+  --material-blur: 28px;
+  --material-shadow: 0 1px 1px oklch(0 0 0 / 0.03), 0 16px 40px -20px oklch(0 0 0 / 0.18);
+
+  /* Overlays */
+  --scrim: oklch(0 0 0 / 0.16);
+  --focus-ring: color-mix(in oklch, var(--accent) 55%, transparent);
+}
+
+/* ───────────────────────── Semantic tokens: dark ────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: var(--color-tide-500);
+    --accent-hover: var(--color-tide-400);
+    --accent-pressed: var(--color-tide-600);
+
+    --destructive: var(--color-gray-50);
+    --destructive-hover: var(--color-white);
+    --on-destructive: var(--color-gray-950);
+
+    --label: oklch(1 0 0 / 0.94);
+    --label-2: oklch(1 0 0 / 0.6);
+    --label-3: oklch(1 0 0 / 0.32);
+    --label-4: oklch(1 0 0 / 0.16);
+
+    --fill: oklch(1 0 0 / 0.12);
+    --fill-2: oklch(1 0 0 / 0.07);
+    --separator: oklch(1 0 0 / 0.11);
+
+    --canvas: var(--color-gray-950);
+
+    --glass-tint: oklch(0.25 0 0 / 0.28);
+    --glass-tint-hover: oklch(0.35 0 0 / 0.36);
+    --glass-solid: oklch(0.24 0 0 / 0.97);
+    --glass-rim: oklch(1 0 0 / 0.42);
+    --glass-rim-dim: oklch(1 0 0 / 0.06);
+    --glass-highlight: oklch(1 0 0 / 0.22);
+    --glass-sheen: oklch(1 0 0 / 0.12);
+    --glass-inner-shade: oklch(0 0 0 / 0.2);
+    --glass-shadow: 0 16px 40px -12px oklch(0 0 0 / 0.65), 0 2px 6px oklch(0 0 0 / 0.3);
+    --glass-brightness: 0.92;
+
+    --thumb: oklch(0.45 0 0 / 0.75);
+    --thumb-shadow: 0 3px 10px -2px oklch(0 0 0 / 0.5);
+
+    --material: oklch(0.2 0 0 / 0.62);
+    --material-solid: oklch(0.2 0 0 / 0.98);
+    --material-rim: oklch(1 0 0 / 0.09);
+    --material-shadow: 0 1px 1px oklch(0 0 0 / 0.2), 0 20px 48px -20px oklch(0 0 0 / 0.7);
+
+    --scrim: oklch(0 0 0 / 0.45);
+  }
+}
+
+/* ───────────────────────── Tailwind bridge ───────────────────────── */
+
+@theme inline {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter",
+    "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-pressed: var(--accent-pressed);
+  --color-on-accent: var(--on-accent);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-on-destructive: var(--on-destructive);
+
+  --color-label: var(--label);
+  --color-label-2: var(--label-2);
+  --color-label-3: var(--label-3);
+  --color-label-4: var(--label-4);
+  --color-fill: var(--fill);
+  --color-fill-2: var(--fill-2);
+  --color-separator: var(--separator);
+  --color-canvas: var(--canvas);
+  --color-thumb: var(--thumb);
+  --color-scrim: var(--scrim);
+
+  --shadow-glass: var(--glass-shadow);
+  --shadow-thumb: var(--thumb-shadow);
+  --shadow-material: var(--material-shadow);
+
+  /* Apple-like type ramp: size / line-height / tracking */
+  --text-large-title: 2.125rem;
+  --text-large-title--line-height: 1.15;
+  --text-large-title--letter-spacing: -0.022em;
+  --text-title: 1.375rem;
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.018em;
+  --text-headline: 1.0625rem;
+  --text-headline--line-height: 1.3;
+  --text-headline--letter-spacing: -0.012em;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.35;
+  --text-body--letter-spacing: -0.012em;
+  --text-callout: 1rem;
+  --text-callout--line-height: 1.3;
+  --text-callout--letter-spacing: -0.01em;
+  --text-subhead: 0.9375rem;
+  --text-subhead--line-height: 1.3;
+  --text-subhead--letter-spacing: -0.006em;
+  --text-footnote: 0.8125rem;
+  --text-footnote--line-height: 1.3;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.25;
+
+  /* Concentric radii: inner radius = outer radius − padding */
+  --radius-card: 1.5rem;
+  --radius-row: 1rem;
+  --radius-control: 0.75rem;
+
+  /* Motion */
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-glass: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ───────────────────────── Base ───────────────────────── */
+
+@layer base {
+  html {
+    background-color: var(--canvas);
+    color: var(--label);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--canvas);
+  }
+
+  ::selection {
+    background-color: color-mix(in oklch, var(--accent) 24%, transparent);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* ───────────────────────── Materials ───────────────────────── */
+
+/*
+ * Liquid glass. Layers, back to front:
+ *   backdrop-filter   blur + saturation boost (refraction is added in JS on
+ *                     Chromium, see design/refraction.ts)
+ *   background        a faint tint so the glass reads on any background
+ *   ::after           sheen: a soft light pool that follows the pointer
+ *   box-shadow        inner top highlight, inner bottom shade, outer drop
+ *   ::before          specular rim: a 1px gradient border, bright where
+ *                     light hits the corners and nearly invisible on the sides
+ */
+@utility glass {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--glass-tint);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
+    brightness(var(--glass-brightness));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
+    brightness(var(--glass-brightness));
+  box-shadow:
+    inset 0 1px 1px 0 var(--glass-highlight),
+    inset 0 -1px 1px 0 var(--glass-inner-shade),
+    inset 0 0 6px 0 color-mix(in srgb, var(--glass-highlight) 18%, transparent),
+    var(--glass-shadow);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      var(--glass-angle, 145deg),
+      var(--glass-rim) 0%,
+      var(--glass-rim-dim) 28%,
+      var(--glass-rim-dim) 72%,
+      var(--glass-rim) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      140% 100% at var(--glass-x, 50%) var(--glass-y, -20%),
+      var(--glass-sheen),
+      transparent 55%
+    );
+    transition: opacity 300ms var(--ease-glass);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--glass-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* A pressable glass surface: lifts, brightens and squishes on press. */
+@utility glass-interactive {
+  transition:
+    transform 450ms var(--ease-spring),
+    background-color 200ms ease;
+
+  &:hover:not([data-disabled], :disabled) {
+    background-color: var(--glass-tint-hover);
+  }
+
+  &:active:not([data-disabled], :disabled) {
+    transform: scale(1.06);
+    transition-duration: 160ms;
+  }
+}
+
+/* Content material: frosted card for the content layer. */
+@utility material {
+  position: relative;
+  background-color: var(--material);
+  -webkit-backdrop-filter: blur(var(--material-blur)) saturate(1.6);
+  backdrop-filter: blur(var(--material-blur)) saturate(1.6);
+  box-shadow:
+    inset 0 0 0 0.5px var(--material-rim),
+    var(--material-shadow);
+
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--material-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ───────────────────────── Motion ───────────────────────── */
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
