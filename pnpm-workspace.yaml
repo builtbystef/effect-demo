@@ -34,7 +34,7 @@ catalog:
   "@types/react": ^19.3.0
   "@types/react-dom": ^19.3.0
   "@vitejs/plugin-react": ^6.2.1
-  tailwindcss: ^4.3.4
+  tailwindcss: ^4.3.5
   "@tailwindcss/vite": ^4.3.4
   "@base-ui/react": ^1.9.0
   "@tanstack/react-router": ^1.170.0
