@@ -18,7 +18,10 @@ export const DealStage = Schema.Literals([
 export type DealStage = typeof DealStage.Type;
 
 export const dealStages = DealStage.literals;
-export const isOpenStage = (stage: DealStage): boolean => stage !== "won" && stage !== "lost";
+
+/** Stages a deal can't move on from. Everything else is the open pipeline. */
+export const closedStages: ReadonlyArray<DealStage> = ["won", "lost"];
+export const isOpenStage = (stage: DealStage): boolean => !closedStages.includes(stage);
 
 const editable = {
   title: Name,

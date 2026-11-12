@@ -1,24 +1,21 @@
 import { type Contact, ContactId } from "@app/domain";
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useAtomValue } from "@effect/atom-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { AsyncResult } from "effect/reactivity";
-import { Ellipsis, Pencil, Plus, Trash2, UserX } from "lucide-react";
+import { Plus, UserX } from "lucide-react";
 import { AsyncView } from "#/components/async-view.tsx";
 import { DetailSkeleton } from "#/components/detail-skeleton.tsx";
 import { Page, PageHeader } from "#/components/layout/page-header.tsx";
 import { Avatar } from "#/components/ui/avatar.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card, CardHeader } from "#/components/ui/card.tsx";
-import { ConfirmDialog } from "#/components/ui/confirm-dialog.tsx";
 import { DescriptionList } from "#/components/ui/description-list.tsx";
 import { EmptyState, ErrorState } from "#/components/ui/feedback.tsx";
-import { Menu, MenuItem } from "#/components/ui/menu.tsx";
-import { notify } from "#/components/ui/toast.tsx";
 import { ActivityTimeline } from "#/features/activities/activity-timeline.tsx";
 import { useCompanyNames } from "#/features/companies/use-company-options.ts";
-import { contactAtom, deleteContactAtom } from "#/features/contacts/api.ts";
-import { ContactFormDialog } from "#/features/contacts/contact-form.tsx";
+import { contactAtom } from "#/features/contacts/api.ts";
+import { ContactActions } from "#/features/contacts/contact-actions.tsx";
 import { ContactStatusBadge } from "#/features/contacts/contact-status.tsx";
 import { dealsAtom } from "#/features/deals/api.ts";
 import { DealFormDialog } from "#/features/deals/deal-form.tsx";
@@ -47,21 +44,11 @@ function ContactLoader({ id }: { readonly id: ContactId }) {
 }
 
 function ContactDetail({ contact }: { readonly contact: Contact }) {
-  const navigate = useNavigate();
-  const remove = useAtomSet(deleteContactAtom, { mode: "promiseExit" });
   const companyNames = useCompanyNames();
   const companyName = contact.companyId === null ? null : companyNames.get(contact.companyId);
   const deals = AsyncResult.getOrElse(useAtomValue(dealsAtom), () => []).filter(
     (deal) => deal.contactId === contact.id,
   );
-
-  const onDelete = async () => {
-    const exit = await remove(contact.id);
-    if (exit._tag === "Success") {
-      notify({ title: "Contact deleted", description: contact.fullName });
-      void navigate({ to: "/contacts" });
-    }
-  };
 
   const company =
     contact.companyId !== null && companyName !== undefined ? (
@@ -87,40 +74,7 @@ function ContactDetail({ contact }: { readonly contact: Contact }) {
             {company}
           </span>
         }
-        actions={
-          <>
-            <ContactFormDialog
-              contact={contact}
-              trigger={
-                <Button>
-                  <Pencil />
-                  Edit
-                </Button>
-              }
-            />
-            <Menu
-              trigger={
-                <Button size="icon" aria-label="More actions">
-                  <Ellipsis />
-                </Button>
-              }
-            >
-              <ConfirmDialog
-                trigger={
-                  <MenuItem destructive closeOnClick={false}>
-                    <Trash2 />
-                    Delete contact
-                  </MenuItem>
-                }
-                title={`Delete ${contact.fullName}?`}
-                description="Their activity history will be deleted too. Deals stay, without a contact. This can't be undone."
-                confirmLabel="Delete contact"
-                destructive
-                onConfirm={() => void onDelete()}
-              />
-            </Menu>
-          </>
-        }
+        actions={<ContactActions contact={contact} />}
       />
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <div className="flex flex-col gap-4">

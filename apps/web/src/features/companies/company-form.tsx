@@ -1,16 +1,11 @@
 import type { Company } from "@app/domain";
 import { useAtomSet } from "@effect/atom-react";
 import { Exit, Schema } from "effect";
-import { type ReactElement, useState } from "react";
+import type { ReactElement } from "react";
 import { useAppForm } from "#/components/form/form.tsx";
+import { FormDialog } from "#/components/form/form-dialog.tsx";
 import { Button } from "#/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogTrigger,
-} from "#/components/ui/dialog.tsx";
+import { DialogClose, DialogFooter } from "#/components/ui/dialog.tsx";
 import { notify } from "#/components/ui/toast.tsx";
 import { formSchema, optionalText, requiredText } from "#/lib/form-schema.ts";
 import { createCompanyAtom, updateCompanyAtom } from "./api.ts";
@@ -31,23 +26,22 @@ export interface CompanyFormDialogProps {
 }
 
 export function CompanyFormDialog({ trigger, company, onCreated }: CompanyFormDialogProps) {
-  const [open, setOpen] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={trigger} />
-      <DialogContent
-        title={company === undefined ? "New company" : "Edit company"}
-        description="Organizations you sell to."
-      >
+    <FormDialog
+      trigger={trigger}
+      title={company === undefined ? "New company" : "Edit company"}
+      description="Organizations you sell to."
+    >
+      {(close) => (
         <CompanyFormBody
           {...(company !== undefined && { company })}
           onDone={(saved) => {
-            setOpen(false);
+            close();
             if (company === undefined) onCreated?.(saved);
           }}
         />
-      </DialogContent>
-    </Dialog>
+      )}
+    </FormDialog>
   );
 }
 
@@ -85,33 +79,26 @@ function CompanyFormBody({
   });
 
   return (
-    <form
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
-      }}
-      className="flex flex-col gap-4"
-    >
-      <form.AppField name="name">
-        {(field) => <field.TextField label="Name" placeholder="Acme Inc." autoFocus />}
-      </form.AppField>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <form.AppField name="domain">
-          {(field) => <field.TextField label="Website" placeholder="acme.com" type="text" />}
+    <form.AppForm>
+      <form.Form className="flex flex-col gap-4">
+        <form.AppField name="name">
+          {(field) => <field.TextField label="Name" placeholder="Acme Inc." autoFocus />}
         </form.AppField>
-        <form.AppField name="industry">
-          {(field) => <field.TextField label="Industry" placeholder="Software" />}
-        </form.AppField>
-      </div>
-      <DialogFooter>
-        <DialogClose render={<Button />}>Cancel</DialogClose>
-        <form.AppForm>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <form.AppField name="domain">
+            {(field) => <field.TextField label="Website" placeholder="acme.com" type="text" />}
+          </form.AppField>
+          <form.AppField name="industry">
+            {(field) => <field.TextField label="Industry" placeholder="Software" />}
+          </form.AppField>
+        </div>
+        <DialogFooter>
+          <DialogClose render={<Button />}>Cancel</DialogClose>
           <form.SubmitButton>
             {company === undefined ? "Create company" : "Save changes"}
           </form.SubmitButton>
-        </form.AppForm>
-      </DialogFooter>
-    </form>
+        </DialogFooter>
+      </form.Form>
+    </form.AppForm>
   );
 }

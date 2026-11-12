@@ -28,11 +28,12 @@ packages/domain         # schemas + the HttpApi contract (CrmApi), shared by bot
 apps/server             # Effect HttpApi on Node + @effect/sql-pg
   src/db/               #   client, migrations, demo seed, row helpers
   src/<entity>/         #   one folder per resource: Repo (SQL) + Http (handlers)
+  src/dashboard/        #   read model: rollup queries only, no table of its own
 apps/web                # React 19 + Vite
-  src/routes/           #   pages (TanStack Router, file-based, code-split)
-  src/features/<x>/     #   per-entity atoms, forms, tables, widgets
+  src/routes/           #   pages: compose features, own no data logic (TanStack Router)
+  src/features/<x>/     #   one slice per entity: api.ts (atoms), forms, actions, lists, widgets
   src/components/ui/    #   design system primitives (Base UI + cva + Tailwind)
-  src/components/form/  #   TanStack Form kit bound to the design system
+  src/components/form/  #   TanStack Form kit + FormDialog, bound to the design system
   src/lib/              #   API client, formatting, theme, form schemas
   src/styles/           #   design tokens (light/dark) and global CSS
 ```

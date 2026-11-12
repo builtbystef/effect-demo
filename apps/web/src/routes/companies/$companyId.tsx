@@ -1,26 +1,23 @@
 import { type Company, CompanyId } from "@app/domain";
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useAtomValue } from "@effect/atom-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { AsyncResult } from "effect/reactivity";
-import { Building2, Ellipsis, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
 import { AsyncView } from "#/components/async-view.tsx";
 import { DetailSkeleton } from "#/components/detail-skeleton.tsx";
 import { Page, PageHeader } from "#/components/layout/page-header.tsx";
 import { Avatar } from "#/components/ui/avatar.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Card, CardHeader } from "#/components/ui/card.tsx";
-import { ConfirmDialog } from "#/components/ui/confirm-dialog.tsx";
 import { DescriptionList } from "#/components/ui/description-list.tsx";
 import { EmptyState, ErrorState } from "#/components/ui/feedback.tsx";
-import { Menu, MenuItem } from "#/components/ui/menu.tsx";
-import { notify } from "#/components/ui/toast.tsx";
 import { ActivityTimeline } from "#/features/activities/activity-timeline.tsx";
-import { companyAtom, deleteCompanyAtom } from "#/features/companies/api.ts";
-import { CompanyFormDialog } from "#/features/companies/company-form.tsx";
+import { companyAtom } from "#/features/companies/api.ts";
+import { CompanyActions } from "#/features/companies/company-actions.tsx";
 import { contactsAtom } from "#/features/contacts/api.ts";
 import { ContactFormDialog } from "#/features/contacts/contact-form.tsx";
-import { ContactStatusBadge } from "#/features/contacts/contact-status.tsx";
+import { ContactList } from "#/features/contacts/contact-list.tsx";
 import { dealsAtom } from "#/features/deals/api.ts";
 import { DealFormDialog } from "#/features/deals/deal-form.tsx";
 import { DealList } from "#/features/deals/deal-list.tsx";
@@ -48,22 +45,12 @@ function CompanyLoader({ id }: { readonly id: CompanyId }) {
 }
 
 function CompanyDetail({ company }: { readonly company: Company }) {
-  const navigate = useNavigate();
-  const remove = useAtomSet(deleteCompanyAtom, { mode: "promiseExit" });
   const contacts = AsyncResult.getOrElse(useAtomValue(contactsAtom), () => []).filter(
     (contact) => contact.companyId === company.id,
   );
   const deals = AsyncResult.getOrElse(useAtomValue(dealsAtom), () => []).filter(
     (deal) => deal.companyId === company.id,
   );
-
-  const onDelete = async () => {
-    const exit = await remove(company.id);
-    if (exit._tag === "Success") {
-      notify({ title: "Company deleted", description: company.name });
-      void navigate({ to: "/companies" });
-    }
-  };
 
   const website =
     company.domain === null ? null : (
@@ -84,40 +71,7 @@ function CompanyDetail({ company }: { readonly company: Company }) {
         leading={<Avatar name={company.name} size="lg" shape="square" />}
         title={company.name}
         description={company.industry ?? undefined}
-        actions={
-          <>
-            <CompanyFormDialog
-              company={company}
-              trigger={
-                <Button>
-                  <Pencil />
-                  Edit
-                </Button>
-              }
-            />
-            <Menu
-              trigger={
-                <Button size="icon" aria-label="More actions">
-                  <Ellipsis />
-                </Button>
-              }
-            >
-              <ConfirmDialog
-                trigger={
-                  <MenuItem destructive closeOnClick={false}>
-                    <Trash2 />
-                    Delete company
-                  </MenuItem>
-                }
-                title={`Delete ${company.name}?`}
-                description="Its activity history will be deleted. Contacts and deals stay, without a company. This can't be undone."
-                confirmLabel="Delete company"
-                destructive
-                onConfirm={() => void onDelete()}
-              />
-            </Menu>
-          </>
-        }
+        actions={<CompanyActions company={company} />}
       />
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <div className="flex flex-col gap-4">
@@ -149,30 +103,7 @@ function CompanyDetail({ company }: { readonly company: Company }) {
                 />
               }
             />
-            {contacts.length === 0 ? (
-              <EmptyState icon={Users} title="No contacts yet" className="py-8" />
-            ) : (
-              <ul className="divide-y divide-border">
-                {contacts.map((contact) => (
-                  <li key={contact.id}>
-                    <Link
-                      to="/contacts/$contactId"
-                      params={{ contactId: contact.id }}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover"
-                    >
-                      <Avatar name={contact.fullName} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-fg">{contact.fullName}</p>
-                        {contact.title !== null && (
-                          <p className="truncate text-xs text-fg-muted">{contact.title}</p>
-                        )}
-                      </div>
-                      <ContactStatusBadge status={contact.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ContactList contacts={contacts} />
           </Card>
           <Card>
             <CardHeader

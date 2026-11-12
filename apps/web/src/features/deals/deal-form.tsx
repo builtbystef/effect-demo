@@ -6,23 +6,17 @@ import {
   type Deal,
   DealStage,
 } from "@app/domain";
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomSet } from "@effect/atom-react";
 import { Exit, Schema } from "effect";
-import { AsyncResult } from "effect/reactivity";
-import { type ReactElement, useMemo, useState } from "react";
+import type { ReactElement } from "react";
 import { useAppForm } from "#/components/form/form.tsx";
+import { FormDialog } from "#/components/form/form-dialog.tsx";
 import { Button } from "#/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogTrigger,
-} from "#/components/ui/dialog.tsx";
+import { DialogClose, DialogFooter } from "#/components/ui/dialog.tsx";
 import { notify } from "#/components/ui/toast.tsx";
 import { amount, formSchema, optionalDate, optionalRef, requiredText } from "#/lib/form-schema.ts";
 import { useCompanyOptions } from "../companies/use-company-options.ts";
-import { contactsAtom } from "../contacts/api.ts";
+import { useContactOptions } from "../contacts/use-contact-options.ts";
 import { createDealAtom, updateDealAtom } from "./api.ts";
 import { dealStageOptions } from "./deal-stage.tsx";
 
@@ -49,21 +43,20 @@ export interface DealFormDialogProps {
 }
 
 export function DealFormDialog({ trigger, deal, defaults }: DealFormDialogProps) {
-  const [open, setOpen] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={trigger} />
-      <DialogContent
-        title={deal === undefined ? "New deal" : "Edit deal"}
-        description="An opportunity in your pipeline."
-      >
+    <FormDialog
+      trigger={trigger}
+      title={deal === undefined ? "New deal" : "Edit deal"}
+      description="An opportunity in your pipeline."
+    >
+      {(close) => (
         <DealFormBody
           {...(deal !== undefined && { deal })}
           {...(defaults !== undefined && { defaults })}
-          onDone={() => setOpen(false)}
+          onDone={close}
         />
-      </DialogContent>
-    </Dialog>
+      )}
+    </FormDialog>
   );
 }
 
@@ -79,17 +72,7 @@ function DealFormBody({
   const create = useAtomSet(createDealAtom, { mode: "promiseExit" });
   const update = useAtomSet(updateDealAtom, { mode: "promiseExit" });
   const companyOptions = useCompanyOptions();
-  const contacts = useAtomValue(contactsAtom);
-  const contactOptions = useMemo(
-    () => [
-      { value: "", label: "No contact" },
-      ...AsyncResult.getOrElse(contacts, () => []).map((c) => ({
-        value: c.id as string,
-        label: c.fullName,
-      })),
-    ],
-    [contacts],
-  );
+  const contactOptions = useContactOptions();
 
   const form = useAppForm({
     defaultValues: {
@@ -113,46 +96,39 @@ function DealFormBody({
   });
 
   return (
-    <form
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
-      }}
-      className="flex flex-col gap-4"
-    >
-      <form.AppField name="title">
-        {(field) => <field.TextField label="Title" placeholder="Annual contract" autoFocus />}
-      </form.AppField>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <form.AppField name="value">
-          {(field) => (
-            <field.TextField label="Value (USD)" inputMode="numeric" placeholder="25000" />
-          )}
+    <form.AppForm>
+      <form.Form className="flex flex-col gap-4">
+        <form.AppField name="title">
+          {(field) => <field.TextField label="Title" placeholder="Annual contract" autoFocus />}
         </form.AppField>
-        <form.AppField name="stage">
-          {(field) => <field.SelectField label="Stage" options={dealStageOptions} />}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <form.AppField name="value">
+            {(field) => (
+              <field.TextField label="Value (USD)" inputMode="numeric" placeholder="25000" />
+            )}
+          </form.AppField>
+          <form.AppField name="stage">
+            {(field) => <field.SelectField label="Stage" options={dealStageOptions} />}
+          </form.AppField>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <form.AppField name="companyId">
+            {(field) => <field.SelectField label="Company" options={companyOptions} />}
+          </form.AppField>
+          <form.AppField name="contactId">
+            {(field) => <field.SelectField label="Contact" options={contactOptions} />}
+          </form.AppField>
+        </div>
+        <form.AppField name="expectedCloseDate">
+          {(field) => <field.TextField label="Expected close" type="date" className="sm:w-1/2" />}
         </form.AppField>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <form.AppField name="companyId">
-          {(field) => <field.SelectField label="Company" options={companyOptions} />}
-        </form.AppField>
-        <form.AppField name="contactId">
-          {(field) => <field.SelectField label="Contact" options={contactOptions} />}
-        </form.AppField>
-      </div>
-      <form.AppField name="expectedCloseDate">
-        {(field) => <field.TextField label="Expected close" type="date" className="sm:w-1/2" />}
-      </form.AppField>
-      <DialogFooter>
-        <DialogClose render={<Button />}>Cancel</DialogClose>
-        <form.AppForm>
+        <DialogFooter>
+          <DialogClose render={<Button />}>Cancel</DialogClose>
           <form.SubmitButton>
             {deal === undefined ? "Create deal" : "Save changes"}
           </form.SubmitButton>
-        </form.AppForm>
-      </DialogFooter>
-    </form>
+        </DialogFooter>
+      </form.Form>
+    </form.AppForm>
   );
 }

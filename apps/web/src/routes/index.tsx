@@ -1,21 +1,16 @@
-import type { Activity, DashboardSummary } from "@app/domain";
+import type { DashboardSummary } from "@app/domain";
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AsyncResult } from "effect/reactivity";
-import { Building2, CircleDollarSign, History, Trophy, Users } from "lucide-react";
-import { useMemo } from "react";
+import { Building2, CircleDollarSign, Trophy, Users } from "lucide-react";
 import { AsyncView } from "#/components/async-view.tsx";
 import { Page, PageHeader } from "#/components/layout/page-header.tsx";
 import { Card, CardHeader } from "#/components/ui/card.tsx";
-import { EmptyState, Skeleton } from "#/components/ui/feedback.tsx";
-import { activityKinds } from "#/features/activities/activity-kind.tsx";
-import { useCompanyNames } from "#/features/companies/use-company-options.ts";
-import { contactsAtom } from "#/features/contacts/api.ts";
+import { Skeleton } from "#/components/ui/feedback.tsx";
+import { RecentActivity } from "#/features/activities/recent-activity.tsx";
 import { dashboardAtom } from "#/features/dashboard/api.ts";
 import { PipelineChart } from "#/features/dashboard/pipeline-chart.tsx";
 import { StatCard } from "#/features/dashboard/stat-card.tsx";
-import { cn } from "#/lib/cn.ts";
-import { formatMoney, formatRelative } from "#/lib/format.ts";
+import { formatMoney } from "#/lib/format.ts";
 
 export const Route = createFileRoute("/")({ component: DashboardPage });
 
@@ -80,71 +75,6 @@ function Dashboard({ summary }: { readonly summary: DashboardSummary }) {
         </Card>
       </div>
     </div>
-  );
-}
-
-function RecentActivity({ activities }: { readonly activities: ReadonlyArray<Activity> }) {
-  const contacts = useAtomValue(contactsAtom);
-  const companyNames = useCompanyNames();
-  const contactNames = useMemo(
-    () =>
-      new Map(AsyncResult.getOrElse(contacts, () => []).map((c) => [c.id, c.fullName] as const)),
-    [contacts],
-  );
-
-  if (activities.length === 0) {
-    return <EmptyState icon={History} title="Nothing logged yet" className="py-8" />;
-  }
-
-  return (
-    <ul className="flex flex-col px-2 pb-2">
-      {activities.map((activity) => {
-        const { label, icon: Icon, tone } = activityKinds[activity.kind];
-        return (
-          <li key={activity.id} className="flex gap-3 rounded-lg px-2 py-2.5">
-            <span
-              className={cn(
-                "grid size-7 shrink-0 place-items-center rounded-full bg-tone/12 text-tone-fg",
-                `tone-${tone}`,
-              )}
-            >
-              <Icon className="size-3.5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="line-clamp-2 text-sm text-fg">{activity.body}</p>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-fg-subtle">
-                <span>{label}</span>
-                {activity.contactId !== null && contactNames.has(activity.contactId) ? (
-                  <>
-                    <span aria-hidden>·</span>
-                    <Link
-                      to="/contacts/$contactId"
-                      params={{ contactId: activity.contactId }}
-                      className="font-medium text-fg-muted hover:text-fg hover:underline"
-                    >
-                      {contactNames.get(activity.contactId)}
-                    </Link>
-                  </>
-                ) : activity.companyId !== null && companyNames.has(activity.companyId) ? (
-                  <>
-                    <span aria-hidden>·</span>
-                    <Link
-                      to="/companies/$companyId"
-                      params={{ companyId: activity.companyId }}
-                      className="font-medium text-fg-muted hover:text-fg hover:underline"
-                    >
-                      {companyNames.get(activity.companyId)}
-                    </Link>
-                  </>
-                ) : null}
-                <span aria-hidden>·</span>
-                <span>{formatRelative(activity.createdAt)}</span>
-              </p>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 

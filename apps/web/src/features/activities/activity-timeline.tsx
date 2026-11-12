@@ -8,11 +8,10 @@ import { Button } from "#/components/ui/button.tsx";
 import { EmptyState, Skeleton } from "#/components/ui/feedback.tsx";
 import { Select } from "#/components/ui/select.tsx";
 import { Tooltip } from "#/components/ui/tooltip.tsx";
-import { cn } from "#/lib/cn.ts";
 import { formatDateTime, formatRelative } from "#/lib/format.ts";
 import { formSchema, requiredText } from "#/lib/form-schema.ts";
 import { activitiesAtom, createActivityAtom, deleteActivityAtom } from "./api.ts";
-import { activityKindOptions, activityKinds } from "./activity-kind.tsx";
+import { ActivityIcon, activityKindOptions, activityKinds } from "./activity-kind.tsx";
 
 /**
  * The history of a contact, company or deal, newest first, with a composer
@@ -72,70 +71,53 @@ function Composer({
   });
 
   return (
-    <form
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
-      }}
-      className="border-b border-border px-4 pb-4"
-    >
-      <form.AppField name="body">
-        {(field) => (
-          <textarea
-            aria-label="Activity details"
-            rows={3}
-            value={field.state.value}
-            onChange={(event) => field.handleChange(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && (event.metaKey || event.ctrlKey))
-                void form.handleSubmit();
-            }}
-            placeholder="What happened? ⌘↵ to save"
-            className="w-full resize-none rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-fg shadow-xs outline-none placeholder:text-fg-subtle focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring"
-          />
-        )}
-      </form.AppField>
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <form.Field name="kind">
+    <form.AppForm>
+      <form.Form className="border-b border-border px-4 pb-4">
+        <form.AppField name="body">
           {(field) => (
-            <Select
-              aria-label="Activity type"
-              options={activityKindOptions}
+            <textarea
+              aria-label="Activity details"
+              rows={3}
               value={field.state.value}
-              onValueChange={(kind) => field.handleChange(kind)}
-              className="h-8 w-32"
+              onChange={(event) => field.handleChange(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && (event.metaKey || event.ctrlKey))
+                  void form.handleSubmit();
+              }}
+              placeholder="What happened? ⌘↵ to save"
+              className="w-full resize-none rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-fg shadow-xs outline-none placeholder:text-fg-subtle focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring"
             />
           )}
-        </form.Field>
-        <form.Subscribe selector={(state) => state.values.body.trim().length > 0}>
-          {(hasBody) => (
-            <form.AppForm>
-              <form.SubmitButton disabled={!hasBody}>Log activity</form.SubmitButton>
-            </form.AppForm>
-          )}
-        </form.Subscribe>
-      </div>
-    </form>
+        </form.AppField>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <form.Field name="kind">
+            {(field) => (
+              <Select
+                aria-label="Activity type"
+                options={activityKindOptions}
+                value={field.state.value}
+                onValueChange={(kind) => field.handleChange(kind)}
+                className="h-8 w-32"
+              />
+            )}
+          </form.Field>
+          <form.Subscribe selector={(state) => state.values.body.trim().length > 0}>
+            {(hasBody) => <form.SubmitButton disabled={!hasBody}>Log activity</form.SubmitButton>}
+          </form.Subscribe>
+        </div>
+      </form.Form>
+    </form.AppForm>
   );
 }
 
 function TimelineItem({ activity }: { readonly activity: Activity }) {
   const remove = useAtomSet(deleteActivityAtom);
-  const { label, icon: Icon, tone } = activityKinds[activity.kind];
   return (
     <li className="group relative flex gap-3 pb-5 last:pb-2 before:absolute before:top-8 before:bottom-0 before:left-[13px] before:w-px before:bg-border last:before:hidden">
-      <span
-        className={cn(
-          "grid size-7 shrink-0 place-items-center rounded-full bg-tone/12 text-tone-fg",
-          `tone-${tone}`,
-        )}
-      >
-        <Icon className="size-3.5" />
-      </span>
+      <ActivityIcon kind={activity.kind} />
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-medium text-fg">{label}</span>
+          <span className="font-medium text-fg">{activityKinds[activity.kind].label}</span>
           <Tooltip content={formatDateTime(activity.createdAt)}>
             <time className="text-fg-subtle">{formatRelative(activity.createdAt)}</time>
           </Tooltip>

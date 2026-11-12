@@ -9,18 +9,19 @@ import { Context, Effect, Layer, Schema } from "effect";
 import { SqlClient } from "effect/sql";
 import { deletedOrNotFound, rows, singleRow } from "../db/util.ts";
 
-export const ActivityRow = Schema.Struct({
+const ActivityRow = Schema.Struct({
   ...Activity.fields,
   createdAt: Schema.DateTimeUtcFromDate,
 });
-export const toActivity = (row: typeof ActivityRow.Type) => new Activity(row);
+const toActivity = (row: typeof ActivityRow.Type) => new Activity(row);
 
 const notFound = (id: ActivityId) => () => new NotFound({ resource: "activity", id });
 
 export class ActivityRepo extends Context.Service<
   ActivityRepo,
   {
-    list(filter: ActivityFilter): Effect.Effect<ReadonlyArray<Activity>>;
+    /** Newest first. */
+    list(filter: ActivityFilter, limit?: number): Effect.Effect<ReadonlyArray<Activity>>;
     create(input: ActivityInput): Effect.Effect<Activity>;
     remove(id: ActivityId): Effect.Effect<void, NotFound>;
   }
@@ -30,7 +31,7 @@ export class ActivityRepo extends Context.Service<
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
 
-      const list = Effect.fn("ActivityRepo.list")((filter: ActivityFilter) => {
+      const list = Effect.fn("ActivityRepo.list")((filter: ActivityFilter, limit = 200) => {
         const clauses = [
           filter.contactId === undefined ? null : sql`contact_id = ${filter.contactId}`,
           filter.companyId === undefined ? null : sql`company_id = ${filter.companyId}`,
@@ -40,7 +41,7 @@ export class ActivityRepo extends Context.Service<
           SELECT * FROM activities
           WHERE ${clauses.length === 0 ? sql`true` : sql.and(clauses)}
           ORDER BY created_at DESC
-          LIMIT 200
+          LIMIT ${limit}
         `.pipe(
           rows(ActivityRow),
           Effect.map((all) => all.map(toActivity)),

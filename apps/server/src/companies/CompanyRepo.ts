@@ -17,6 +17,7 @@ import {
   singleRow,
   timestampColumns,
 } from "../db/util.ts";
+import { isOpenDeal } from "../deals/DealRepo.ts";
 
 const CompanyRow = Schema.Struct({ ...Company.fields, ...timestampColumns });
 const SummaryRow = Schema.Struct({ ...CompanySummary.fields, ...timestampColumns });
@@ -44,7 +45,7 @@ export class CompanyRepo extends Context.Service<
           c.*,
           (SELECT count(*)::int FROM contacts WHERE company_id = c.id) AS contact_count,
           (SELECT coalesce(sum(value), 0)::int FROM deals
-            WHERE company_id = c.id AND stage NOT IN ('won', 'lost')) AS open_deal_value
+            WHERE company_id = c.id AND ${isOpenDeal(sql)}) AS open_deal_value
         FROM companies c
         ORDER BY lower(c.name)
       `.pipe(

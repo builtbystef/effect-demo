@@ -1,9 +1,13 @@
 import { CrmApi, DashboardSummary, StageSummary, dealStages } from "@app/domain";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 import { SqlClient } from "effect/sql";
-import { rows } from "../db/util.ts";
-import { ActivityRow, toActivity } from "../activities/ActivityRepo.ts";
+import { ActivityRepo } from "../activities/ActivityRepo.ts";
+import { rows, singleRow } from "../db/util.ts";
+import { isOpenDeal } from "../deals/DealRepo.ts";
+
+// The dashboard is a read model: it owns no table, only rollups across the
+// others, so its queries live next to its one handler instead of in a repo.
 
 const Totals = Schema.Struct({
   contacts: Schema.Int,
@@ -20,47 +24,43 @@ export const DashboardHttp = HttpApiBuilder.group(
   "dashboard",
   Effect.fn(function* (handlers) {
     const sql = yield* SqlClient.SqlClient;
+    const activities = yield* ActivityRepo;
+    const open = isOpenDeal(sql);
 
     const totals = sql`
       SELECT
         (SELECT count(*)::int FROM contacts) AS contacts,
         (SELECT count(*)::int FROM companies) AS companies,
-        (SELECT count(*)::int FROM deals WHERE stage NOT IN ('won', 'lost')) AS open_deals,
-        (SELECT coalesce(sum(value), 0)::int FROM deals WHERE stage NOT IN ('won', 'lost')) AS pipeline_value,
+        (SELECT count(*)::int FROM deals WHERE ${open}) AS open_deals,
+        (SELECT coalesce(sum(value), 0)::int FROM deals WHERE ${open}) AS pipeline_value,
         (SELECT coalesce(sum(value), 0)::int FROM deals WHERE stage = 'won') AS won_value
-    `.pipe(rows(Totals));
+    `.pipe(singleRow(Totals));
 
     const stages = sql`
       SELECT stage, count(*)::int AS count, coalesce(sum(value), 0)::int AS value
       FROM deals GROUP BY stage
     `.pipe(rows(StageRow));
 
-    const recent = sql`SELECT * FROM activities ORDER BY created_at DESC LIMIT 8`.pipe(
-      rows(ActivityRow),
-    );
-
-    const summary = Effect.all([totals, stages, recent], { concurrency: "unbounded" }).pipe(
-      Effect.map(([[t], byStage, activity]) => {
-        // Every stage appears, in pipeline order, even with no deals in it.
-        const stageSummaries = dealStages.map(
-          (stage) =>
-            new StageSummary(
-              byStage.find((row) => row.stage === stage) ?? { stage, count: 0, value: 0 },
+    const summary = Effect.all([totals, stages, activities.list({}, 8)], {
+      concurrency: "unbounded",
+    }).pipe(
+      Effect.map(
+        ([totals, byStage, recentActivity]) =>
+          new DashboardSummary({
+            ...totals,
+            // Every stage appears, in pipeline order, even with no deals in it.
+            stages: dealStages.map(
+              (stage) =>
+                new StageSummary(
+                  byStage.find((row) => row.stage === stage) ?? { stage, count: 0, value: 0 },
+                ),
             ),
-        );
-        return new DashboardSummary({
-          contacts: t?.contacts ?? 0,
-          companies: t?.companies ?? 0,
-          openDeals: t?.openDeals ?? 0,
-          pipelineValue: t?.pipelineValue ?? 0,
-          wonValue: t?.wonValue ?? 0,
-          stages: stageSummaries,
-          recentActivity: activity.map(toActivity),
-        });
-      }),
+            recentActivity,
+          }),
+      ),
       Effect.withSpan("Dashboard.summary"),
     );
 
     return handlers.handle("summary", () => summary);
   }),
-);
+).pipe(Layer.provide(ActivityRepo.layer));

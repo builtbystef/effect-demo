@@ -1,4 +1,11 @@
-import { Deal, type DealId, type DealInput, type DealPatch, NotFound } from "@app/domain";
+import {
+  closedStages,
+  Deal,
+  type DealId,
+  type DealInput,
+  type DealPatch,
+  NotFound,
+} from "@app/domain";
 import { Context, Effect, Layer, Schema } from "effect";
 import { SqlClient } from "effect/sql";
 import {
@@ -15,6 +22,9 @@ const DealRow = Schema.Struct({ ...Deal.fields, ...timestampColumns });
 
 const toDeal = (row: typeof DealRow.Type) => new Deal(row);
 const notFound = (id: DealId) => () => new NotFound({ resource: "deal", id });
+
+/** `isOpenStage` as a SQL condition, for queries that roll up the open pipeline. */
+export const isOpenDeal = (sql: SqlClient.SqlClient) => sql`stage NOT IN ${sql.in(closedStages)}`;
 
 export class DealRepo extends Context.Service<
   DealRepo,

@@ -6,16 +6,11 @@ import {
 } from "@app/domain";
 import { useAtomSet } from "@effect/atom-react";
 import { Cause, Exit, Option, Schema } from "effect";
-import { type ReactElement, useState } from "react";
+import type { ReactElement } from "react";
 import { useAppForm } from "#/components/form/form.tsx";
+import { FormDialog } from "#/components/form/form-dialog.tsx";
 import { Button } from "#/components/ui/button.tsx";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogTrigger,
-} from "#/components/ui/dialog.tsx";
+import { DialogClose, DialogFooter } from "#/components/ui/dialog.tsx";
 import { notify } from "#/components/ui/toast.tsx";
 import {
   formSchema,
@@ -55,24 +50,23 @@ export function ContactFormDialog({
   defaultCompanyId,
   onCreated,
 }: ContactFormDialogProps) {
-  const [open, setOpen] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={trigger} />
-      <DialogContent
-        title={contact === undefined ? "New contact" : "Edit contact"}
-        description="People you work with."
-      >
+    <FormDialog
+      trigger={trigger}
+      title={contact === undefined ? "New contact" : "Edit contact"}
+      description="People you work with."
+    >
+      {(close) => (
         <ContactFormBody
           {...(contact !== undefined && { contact })}
           {...(defaultCompanyId !== undefined && { defaultCompanyId })}
           onDone={(saved) => {
-            setOpen(false);
+            close();
             if (contact === undefined) onCreated?.(saved);
           }}
         />
-      </DialogContent>
-    </Dialog>
+      )}
+    </FormDialog>
   );
 }
 
@@ -127,56 +121,49 @@ function ContactFormBody({
   });
 
   return (
-    <form
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        void form.handleSubmit();
-      }}
-      className="flex flex-col gap-4"
-    >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <form.AppField name="firstName">
-          {(field) => <field.TextField label="First name" autoComplete="off" autoFocus />}
+    <form.AppForm>
+      <form.Form className="flex flex-col gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <form.AppField name="firstName">
+            {(field) => <field.TextField label="First name" autoComplete="off" autoFocus />}
+          </form.AppField>
+          <form.AppField name="lastName">
+            {(field) => <field.TextField label="Last name" autoComplete="off" />}
+          </form.AppField>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <form.AppField name="email">
+            {(field) => (
+              <field.TextField
+                label="Email"
+                type="email"
+                placeholder="name@company.com"
+                autoComplete="off"
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="phone">
+            {(field) => <field.TextField label="Phone" type="tel" autoComplete="off" />}
+          </form.AppField>
+        </div>
+        <form.AppField name="title">
+          {(field) => <field.TextField label="Job title" placeholder="Head of Operations" />}
         </form.AppField>
-        <form.AppField name="lastName">
-          {(field) => <field.TextField label="Last name" autoComplete="off" />}
-        </form.AppField>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <form.AppField name="email">
-          {(field) => (
-            <field.TextField
-              label="Email"
-              type="email"
-              placeholder="name@company.com"
-              autoComplete="off"
-            />
-          )}
-        </form.AppField>
-        <form.AppField name="phone">
-          {(field) => <field.TextField label="Phone" type="tel" autoComplete="off" />}
-        </form.AppField>
-      </div>
-      <form.AppField name="title">
-        {(field) => <field.TextField label="Job title" placeholder="Head of Operations" />}
-      </form.AppField>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <form.AppField name="companyId">
-          {(field) => <field.SelectField label="Company" options={companyOptions} />}
-        </form.AppField>
-        <form.AppField name="status">
-          {(field) => <field.SelectField label="Status" options={contactStatusOptions} />}
-        </form.AppField>
-      </div>
-      <DialogFooter>
-        <DialogClose render={<Button />}>Cancel</DialogClose>
-        <form.AppForm>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <form.AppField name="companyId">
+            {(field) => <field.SelectField label="Company" options={companyOptions} />}
+          </form.AppField>
+          <form.AppField name="status">
+            {(field) => <field.SelectField label="Status" options={contactStatusOptions} />}
+          </form.AppField>
+        </div>
+        <DialogFooter>
+          <DialogClose render={<Button />}>Cancel</DialogClose>
           <form.SubmitButton>
             {contact === undefined ? "Create contact" : "Save changes"}
           </form.SubmitButton>
-        </form.AppForm>
-      </DialogFooter>
-    </form>
+        </DialogFooter>
+      </form.Form>
+    </form.AppForm>
   );
 }

@@ -7,10 +7,17 @@ import { Input, Textarea } from "#/components/ui/input.tsx";
 import { Select, type SelectOption } from "#/components/ui/select.tsx";
 
 /*
- * The app's form kit: TanStack Form bound to the design system. Forms are
- * built with `useAppForm` and render fields as `<form.AppField name="…">{(f) =>
- * <f.TextField label="…" />}</form.AppField>`, so every field gets the same
- * label, error and accessibility wiring.
+ * The app's form kit: TanStack Form bound to the design system. A form is
+ * built with `useAppForm` and rendered as
+ *
+ *   <form.AppForm>
+ *     <form.Form>
+ *       <form.AppField name="…">{(f) => <f.TextField label="…" />}</form.AppField>
+ *       <form.SubmitButton>Save</form.SubmitButton>
+ *     </form.Form>
+ *   </form.AppForm>
+ *
+ * so every field gets the same label, error and accessibility wiring.
  */
 
 const { fieldContext, formContext, useFieldContext, useFormContext } = createFormHookContexts();
@@ -117,6 +124,29 @@ function SelectField<T extends string>({
   );
 }
 
+/** A `<form>` that submits through TanStack Form, with its validation instead of the browser's. */
+function Form({
+  children,
+  className,
+}: {
+  readonly children: ReactNode;
+  readonly className?: string;
+}) {
+  const form = useFormContext();
+  return (
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+      className={className}
+    >
+      {children}
+    </form>
+  );
+}
+
 function SubmitButton({
   children,
   disabled = false,
@@ -141,5 +171,5 @@ export const { useAppForm, withForm } = createFormHook({
   fieldContext,
   formContext,
   fieldComponents: { TextField, TextareaField, SelectField },
-  formComponents: { SubmitButton },
+  formComponents: { Form, SubmitButton },
 });
