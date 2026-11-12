@@ -1,14 +1,15 @@
 import { CrmApi } from "@app/domain";
 import { NodeHttpServer, NodeServices } from "@effect/platform-node";
 import { createServer } from "node:http";
+import { sql } from "drizzle-orm";
 import { Config, Effect, Layer, Option } from "effect";
 import { HttpRouter, HttpServerResponse, HttpStaticServer } from "effect/http";
 import { HttpApiBuilder, HttpApiScalar } from "effect/http-api";
-import { SqlClient } from "effect/sql";
 import { ActivitiesHttp } from "./activities/ActivitiesHttp.ts";
 import { CompaniesHttp } from "./companies/CompaniesHttp.ts";
 import { ContactsHttp } from "./contacts/ContactsHttp.ts";
 import { DashboardHttp } from "./dashboard/DashboardHttp.ts";
+import { Db } from "./db/Database.ts";
 import { DealsHttp } from "./deals/DealsHttp.ts";
 
 const ApiRoutes = HttpApiBuilder.layer(CrmApi, { openapiPath: "/api/openapi.json" }).pipe(
@@ -22,8 +23,8 @@ const HealthRoute = HttpRouter.add(
   "GET",
   "/healthz",
   Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    yield* sql`SELECT 1`;
+    const db = yield* Db;
+    yield* db.execute(sql`SELECT 1`);
     return HttpServerResponse.text("ok");
   }).pipe(
     Effect.catch(() => Effect.succeed(HttpServerResponse.text("unavailable", { status: 503 }))),

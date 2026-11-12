@@ -1,13 +1,15 @@
 import { CrmApi, DashboardSummary, StageSummary, dealStages } from "@app/domain";
-import { Effect, Layer, Schema } from "effect";
+import { count, eq, type SQL, sql } from "drizzle-orm";
+import { Effect, Schema } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
-import { SqlClient } from "effect/sql";
-import { ActivityRepo } from "../activities/ActivityRepo.ts";
-import { rows, singleRow } from "../db/util.ts";
-import { isOpenDeal } from "../deals/DealRepo.ts";
+import * as Activities from "../activities/store.ts";
+import { Db } from "../db/Database.ts";
+import { companies, contacts, deals } from "../db/schema.ts";
+import { singleRow } from "../db/util.ts";
+import { isOpenDeal } from "../deals/store.ts";
 
 // The dashboard is a read model: it owns no table, only rollups across the
-// others, so its queries live next to its one handler instead of in a repo.
+// others, so its queries live next to its one handler.
 
 const Totals = Schema.Struct({
   contacts: Schema.Int,
@@ -17,31 +19,37 @@ const Totals = Schema.Struct({
   wonValue: Schema.Int,
 });
 
-const StageRow = Schema.Struct(StageSummary.fields);
+/** Total deal value, optionally only of the deals matching `filter`; never `NULL`. */
+const valueOf = (filter?: SQL) =>
+  filter === undefined
+    ? sql<number>`coalesce(sum(${deals.value}), 0)::int`
+    : sql<number>`coalesce(sum(${deals.value}) FILTER (WHERE ${filter}), 0)::int`;
 
 export const DashboardHttp = HttpApiBuilder.group(
   CrmApi,
   "dashboard",
   Effect.fn(function* (handlers) {
-    const sql = yield* SqlClient.SqlClient;
-    const activities = yield* ActivityRepo;
-    const open = isOpenDeal(sql);
+    const db = yield* Db;
 
-    const totals = sql`
-      SELECT
-        (SELECT count(*)::int FROM contacts) AS contacts,
-        (SELECT count(*)::int FROM companies) AS companies,
-        (SELECT count(*)::int FROM deals WHERE ${open}) AS open_deals,
-        (SELECT coalesce(sum(value), 0)::int FROM deals WHERE ${open}) AS pipeline_value,
-        (SELECT coalesce(sum(value), 0)::int FROM deals WHERE stage = 'won') AS won_value
-    `.pipe(singleRow(Totals));
+    // An aggregate without GROUP BY always returns exactly one row.
+    const totals = db
+      .select({
+        contacts: db.$count(contacts),
+        companies: db.$count(companies),
+        openDeals: sql<number>`count(*) FILTER (WHERE ${isOpenDeal})::int`,
+        pipelineValue: valueOf(isOpenDeal),
+        wonValue: valueOf(eq(deals.stage, "won")),
+      })
+      .from(deals)
+      .pipe(singleRow(Totals));
 
-    const stages = sql`
-      SELECT stage, count(*)::int AS count, coalesce(sum(value), 0)::int AS value
-      FROM deals GROUP BY stage
-    `.pipe(rows(StageRow));
+    const stages = db
+      .select({ stage: deals.stage, count: count(), value: valueOf() })
+      .from(deals)
+      .groupBy(deals.stage)
+      .pipe(Effect.orDie);
 
-    const summary = Effect.all([totals, stages, activities.list({}, 8)], {
+    const summary = Effect.all([totals, stages, Activities.list(db, {}, 8)], {
       concurrency: "unbounded",
     }).pipe(
       Effect.map(
@@ -63,4 +71,4 @@ export const DashboardHttp = HttpApiBuilder.group(
 
     return handlers.handle("summary", () => summary);
   }),
-).pipe(Layer.provide(ActivityRepo.layer));
+);

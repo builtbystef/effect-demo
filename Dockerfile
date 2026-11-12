@@ -42,6 +42,7 @@ WORKDIR /app
 COPY --from=server-deps /repo ./
 COPY packages/domain/src ./packages/domain/src
 COPY apps/server/src ./apps/server/src
+COPY apps/server/drizzle ./apps/server/drizzle
 COPY --from=web /repo/apps/web/dist ./public
 
 USER node

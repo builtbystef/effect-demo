@@ -1,19 +1,20 @@
 import { CrmApi } from "@app/domain";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
-import { ContactRepo } from "./ContactRepo.ts";
+import { Db } from "../db/Database.ts";
+import * as Contacts from "./store.ts";
 
 export const ContactsHttp = HttpApiBuilder.group(
   CrmApi,
   "contacts",
   Effect.fn(function* (handlers) {
-    const repo = yield* ContactRepo;
+    const db = yield* Db;
     return handlers.handleAll({
-      list: () => repo.list,
-      get: ({ params }) => repo.get(params.id),
-      create: ({ payload }) => repo.create(payload),
-      update: ({ params, payload }) => repo.update(params.id, payload),
-      remove: ({ params }) => repo.remove(params.id),
+      list: () => Contacts.list(db),
+      get: ({ params }) => Contacts.get(db, params.id),
+      create: ({ payload }) => Contacts.create(db, payload),
+      update: ({ params, payload }) => Contacts.update(db, params.id, payload),
+      remove: ({ params }) => Contacts.remove(db, params.id),
     });
   }),
-).pipe(Layer.provide(ContactRepo.layer));
+);

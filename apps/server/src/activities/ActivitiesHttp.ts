@@ -1,17 +1,18 @@
 import { CrmApi } from "@app/domain";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
-import { ActivityRepo } from "./ActivityRepo.ts";
+import { Db } from "../db/Database.ts";
+import * as Activities from "./store.ts";
 
 export const ActivitiesHttp = HttpApiBuilder.group(
   CrmApi,
   "activities",
   Effect.fn(function* (handlers) {
-    const repo = yield* ActivityRepo;
+    const db = yield* Db;
     return handlers.handleAll({
-      list: ({ query }) => repo.list(query),
-      create: ({ payload }) => repo.create(payload),
-      remove: ({ params }) => repo.remove(params.id),
+      list: ({ query }) => Activities.list(db, query),
+      create: ({ payload }) => Activities.create(db, payload),
+      remove: ({ params }) => Activities.remove(db, params.id),
     });
   }),
-).pipe(Layer.provide(ActivityRepo.layer));
+);

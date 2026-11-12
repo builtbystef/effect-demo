@@ -19,6 +19,11 @@ catalog:
   "@effect/sql-pg": ^4.1.2
   "@effect/atom-react": ^4.1.2
 
+  # Drizzle 1.0 is a release candidate (its Effect v4 driver is new in 1.0), so
+  # pin exact versions and bump the pair together.
+  drizzle-orm: 1.0.0-rc.5
+  drizzle-kit: 1.0.0-rc.5
+
   # Infrastructure as code. Alchemy v2 is still in beta, so pin exact versions
   # and bump the pair together.
   alchemy: 2.0.0-beta.85

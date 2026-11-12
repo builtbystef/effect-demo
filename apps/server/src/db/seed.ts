@@ -1,5 +1,12 @@
 import { Config, Effect } from "effect";
-import { SqlClient } from "effect/sql";
+import { Db } from "./Database.ts";
+import { activities, companies, contacts, deals } from "./schema.ts";
+
+/** Find an inserted row's id by a natural key (name, email, title). */
+const lookup =
+  <Id>(inserted: ReadonlyArray<{ readonly id: Id; readonly key: string | null }>) =>
+  (key: string): Id | null =>
+    inserted.find((row) => row.key === key)?.id ?? null;
 
 /**
  * Fills an empty database with a small, believable data set so a fresh dev
@@ -10,25 +17,25 @@ export const seedDemoData = Effect.gen(function* () {
   const enabled = yield* Config.Boolean("SEED_DEMO_DATA").pipe(Config.withDefault(false));
   if (!enabled) return;
 
-  const sql = yield* SqlClient.SqlClient;
-  const existing = yield* sql`SELECT 1 FROM companies LIMIT 1`;
-  if (existing.length > 0) return;
+  const db = yield* Db;
+  if ((yield* db.$count(companies)) > 0) return;
 
-  yield* sql.withTransaction(
+  yield* db.transaction((tx) =>
     Effect.gen(function* () {
-      const companies = yield* sql<{ id: string; name: string }>`
-        INSERT INTO companies ${sql.insert([
+      const company = yield* tx
+        .insert(companies)
+        .values([
           { name: "Northwind Traders", domain: "northwind.example", industry: "Wholesale" },
           { name: "Globex", domain: "globex.example", industry: "Manufacturing" },
           { name: "Initech", domain: "initech.example", industry: "Software" },
           { name: "Umbrella Health", domain: "umbrella.example", industry: "Healthcare" },
-        ])}
-        RETURNING id, name
-      `;
-      const company = (name: string) => companies.find((c) => c.name === name)?.id ?? null;
+        ])
+        .returning({ id: companies.id, key: companies.name })
+        .pipe(Effect.map(lookup));
 
-      const contacts = yield* sql<{ id: string; email: string }>`
-        INSERT INTO contacts ${sql.insert([
+      const contact = yield* tx
+        .insert(contacts)
+        .values([
           {
             firstName: "Ada",
             lastName: "Fischer",
@@ -74,13 +81,13 @@ export const seedDemoData = Effect.gen(function* () {
             status: "churned",
             companyId: company("Initech"),
           },
-        ])}
-        RETURNING id, email
-      `;
-      const contact = (email: string) => contacts.find((c) => c.email === email)?.id ?? null;
+        ])
+        .returning({ id: contacts.id, key: contacts.email })
+        .pipe(Effect.map(lookup));
 
-      const deals = yield* sql<{ id: string; title: string }>`
-        INSERT INTO deals ${sql.insert([
+      const deal = yield* tx
+        .insert(deals)
+        .values([
           {
             title: "Annual supply contract",
             value: 48000,
@@ -129,43 +136,40 @@ export const seedDemoData = Effect.gen(function* () {
             contactId: contact("jo@initech.example"),
             expectedCloseDate: null,
           },
-        ])}
-        RETURNING id, title
-      `;
-      const deal = (title: string) => deals.find((d) => d.title === title)?.id ?? null;
+        ])
+        .returning({ id: deals.id, key: deals.title })
+        .pipe(Effect.map(lookup));
 
-      yield* sql`
-        INSERT INTO activities ${sql.insert([
-          {
-            kind: "meeting",
-            body: "Kickoff for the warehouse expansion. They want a phased rollout starting in Q1.",
-            contactId: contact("ada@northwind.example"),
-            companyId: company("Northwind Traders"),
-            dealId: deal("Warehouse expansion"),
-          },
-          {
-            kind: "call",
-            body: "Walked Tomás through the pilot scope. Sending a proposal by Friday.",
-            contactId: contact("tomas@globex.example"),
-            companyId: company("Globex"),
-            dealId: deal("Factory automation pilot"),
-          },
-          {
-            kind: "email",
-            body: "Shared pricing tiers for 50 and 120 seats.",
-            contactId: contact("mei@initech.example"),
-            companyId: company("Initech"),
-            dealId: deal("Developer tooling seats"),
-          },
-          {
-            kind: "note",
-            body: "Samir is evaluating three vendors. Budget approval expected in January.",
-            contactId: contact("samir@umbrella.example"),
-            companyId: company("Umbrella Health"),
-            dealId: deal("Clinic network rollout"),
-          },
-        ])}
-      `;
+      yield* tx.insert(activities).values([
+        {
+          kind: "meeting",
+          body: "Kickoff for the warehouse expansion. They want a phased rollout starting in Q1.",
+          contactId: contact("ada@northwind.example"),
+          companyId: company("Northwind Traders"),
+          dealId: deal("Warehouse expansion"),
+        },
+        {
+          kind: "call",
+          body: "Walked Tomás through the pilot scope. Sending a proposal by Friday.",
+          contactId: contact("tomas@globex.example"),
+          companyId: company("Globex"),
+          dealId: deal("Factory automation pilot"),
+        },
+        {
+          kind: "email",
+          body: "Shared pricing tiers for 50 and 120 seats.",
+          contactId: contact("mei@initech.example"),
+          companyId: company("Initech"),
+          dealId: deal("Developer tooling seats"),
+        },
+        {
+          kind: "note",
+          body: "Samir is evaluating three vendors. Budget approval expected in January.",
+          contactId: contact("samir@umbrella.example"),
+          companyId: company("Umbrella Health"),
+          dealId: deal("Clinic network rollout"),
+        },
+      ]);
     }),
   );
 
