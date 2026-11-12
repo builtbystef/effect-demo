@@ -1,9 +1,23 @@
 import { RegistryProvider } from "@effect/atom-react";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App.tsx";
-import { ToastProvider, TooltipProvider } from "./design/index.ts";
-import "./index.css";
+import { ToastProvider } from "#/components/ui/toast.tsx";
+import { TooltipProvider } from "#/components/ui/tooltip.tsx";
+import { routeTree } from "./routeTree.gen.ts";
+import "./styles/globals.css";
+
+const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+  scrollRestoration: true,
+});
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 const root = document.getElementById("root");
 if (root === null) throw new Error("#root element not found");
@@ -13,7 +27,7 @@ createRoot(root).render(
     <RegistryProvider>
       <TooltipProvider delay={400}>
         <ToastProvider>
-          <App />
+          <RouterProvider router={router} />
         </ToastProvider>
       </TooltipProvider>
     </RegistryProvider>

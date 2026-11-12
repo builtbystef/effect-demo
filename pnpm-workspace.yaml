@@ -16,8 +16,13 @@ catalog:
   # Effect: the core package plus its satellites share one version line.
   effect: ^4.1.2
   "@effect/platform-node": ^4.1.2
-  "@effect/sql-sqlite-node": ^4.1.2
+  "@effect/sql-pg": ^4.1.2
   "@effect/atom-react": ^4.1.2
+
+  # Infrastructure as code. Alchemy v2 is still in beta, so pin exact versions
+  # and bump the pair together.
+  alchemy: 2.0.0-beta.85
+  "@alchemy.run/docker": 2.0.0-beta.85
 
   react: ^19.3.0
   react-dom: ^19.3.0
@@ -27,6 +32,15 @@ catalog:
   tailwindcss: ^4.3.4
   "@tailwindcss/vite": ^4.3.4
   "@base-ui/react": ^1.9.0
+  "@tanstack/react-router": ^1.170.0
+  "@tanstack/router-plugin": ^1.169.0
+  "@tanstack/react-table": ^9.3.0
+  "@tanstack/react-form": ^1.33.0
+  "@fontsource-variable/inter": ^5.3.0
+  lucide-react: ^1.60.0
+  class-variance-authority: ^0.7.1
+  clsx: ^2.1.1
+  tailwind-merge: ^3.7.0
 overrides:
   vite: "catalog:"
 peerDependencyRules:

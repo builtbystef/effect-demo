@@ -25,3 +25,6 @@ coverage/
 # Logs & OS noise
 *.log
 .DS_Store
+
+# Alchemy state (resource ids, generated secrets). Never commit it.
+.alchemy/

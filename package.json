@@ -1,16 +1,22 @@
 {
-  "name": "effect-demo",
+  "name": "effect-crm",
   "private": true,
   "license": "MIT",
   "author": "builtbystef",
   "type": "module",
   "scripts": {
-    "dev": "vp run -r --parallel dev",
+    "dev": "alchemy dev",
+    "deploy": "alchemy deploy",
+    "destroy": "alchemy destroy",
     "build": "vp run -r build",
     "ci": "vp check && vp test && vp run -r build"
   },
   "devDependencies": {
+    "@alchemy.run/docker": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@types/node": "catalog:",
+    "alchemy": "catalog:",
+    "effect": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"

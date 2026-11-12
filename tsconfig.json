@@ -1,0 +1,10 @@
+{
+  // Covers files at the repo root that aren't part of a workspace project,
+  // such as the Alchemy stack. Workspace projects have their own tsconfig.
+  "extends": "./tsconfig/node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["alchemy.run.ts"]
+}
