@@ -11,6 +11,8 @@ const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   scrollRestoration: true,
+  // On desktop, pages scroll inside the inset <main> panel, not the window.
+  scrollToTopSelectors: ["#main"],
 });
 
 declare module "@tanstack/react-router" {

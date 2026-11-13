@@ -77,3 +77,30 @@
     opacity: 1;
   }
 }
+
+/* The pipeline board scrolls horizontally with its own slim bar (see
+   board-scroller.tsx), so hide the native horizontal one but keep a thin
+   vertical one for tall columns. Browsers without ::-webkit-scrollbar
+   (Firefox) can't style the axes separately, so hide both there. */
+.board-scroller {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 0;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background: var(--border-strong) padding-box;
+  }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .board-scroller {
+    scrollbar-width: none;
+  }
+}

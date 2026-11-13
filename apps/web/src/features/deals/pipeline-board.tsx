@@ -8,6 +8,7 @@ import { cn } from "#/lib/cn.ts";
 import { formatCalendarDate, formatMoney, formatMoneyCompact } from "#/lib/format.ts";
 import { useCompanyNames } from "../companies/use-company-options.ts";
 import { updateDealAtom } from "./api.ts";
+import { BoardScroller } from "./board-scroller.tsx";
 import { DealActions } from "./deal-actions.tsx";
 import { DealFormDialog } from "./deal-form.tsx";
 import { dealStageMeta } from "./deal-stage.tsx";
@@ -29,7 +30,7 @@ export function PipelineBoard({ deals }: { readonly deals: ReadonlyArray<Deal> }
   };
 
   return (
-    <div className="flex snap-x gap-3 overflow-x-auto pb-4">
+    <BoardScroller>
       {dealStages.map((stage) => {
         const column = deals.filter((deal) => deal.stage === stage);
         const total = column.reduce((sum, deal) => sum + deal.value, 0);
@@ -48,13 +49,14 @@ export function PipelineBoard({ deals }: { readonly deals: ReadonlyArray<Deal> }
             }}
             onDrop={drop(stage)}
             className={cn(
-              "flex w-72 shrink-0 snap-start flex-col rounded-xl border border-transparent bg-surface-muted/60 p-2 transition-colors",
-              over === stage && "border-primary/40 bg-primary-subtle",
+              "flex w-72 shrink-0 snap-start flex-col rounded-xl border-2 border-tone/50 bg-surface-muted/60 p-2 transition-colors",
+              `tone-${tone}`,
+
+              over === stage && "border-tone bg-tone/10",
             )}
           >
             <header className="flex items-center justify-between gap-2 px-1.5 pt-1 pb-2.5">
               <div className="flex min-w-0 items-center gap-2">
-                <span className={cn("size-2 rounded-full bg-tone", `tone-${tone}`)} />
                 <h2 className="text-[13px] font-semibold text-fg">{label}</h2>
                 <span className="text-xs text-fg-subtle tabular-nums">{column.length}</span>
               </div>
@@ -90,7 +92,7 @@ export function PipelineBoard({ deals }: { readonly deals: ReadonlyArray<Deal> }
           </section>
         );
       })}
-    </div>
+    </BoardScroller>
   );
 }
 

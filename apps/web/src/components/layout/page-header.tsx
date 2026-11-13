@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import { cn } from "#/lib/cn.ts";
 
 export interface PageHeaderProps {
   readonly title: ReactNode;
@@ -45,12 +46,20 @@ export function PageHeader({ title, description, actions, leading, back }: PageH
 export function Page({
   children,
   wide = false,
+  fill = false,
 }: {
   readonly children: ReactNode;
   readonly wide?: boolean;
+  /** On desktop, stretch to the panel's height so content can fill it. */
+  readonly fill?: boolean;
 }) {
   return (
-    <div className={wide ? "px-4 py-6 sm:px-8" : "mx-auto w-full max-w-6xl px-4 py-6 sm:px-8"}>
+    <div
+      className={cn(
+        wide ? "px-4 py-6 sm:px-8" : "mx-auto w-full max-w-6xl px-4 py-6 sm:px-8",
+        fill && "md:flex md:h-full md:flex-col",
+      )}
+    >
       {children}
     </div>
   );

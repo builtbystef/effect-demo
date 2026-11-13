@@ -17,7 +17,7 @@ function DealsPage() {
   const result = useAtomValue(dealsAtom);
   const refresh = useAtomRefresh(dealsAtom);
   return (
-    <Page wide>
+    <Page wide fill>
       <AsyncView result={result} onRetry={refresh} loading={<BoardSkeleton />}>
         {(deals) => {
           const open = deals.filter((deal) => isOpenStage(deal.stage));

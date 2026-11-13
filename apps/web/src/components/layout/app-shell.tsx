@@ -28,11 +28,14 @@ const nav: ReadonlyArray<{
   { to: "/deals", label: "Deals", icon: Handshake },
 ];
 
-/** Sidebar navigation on desktop, a top bar on small screens. */
+/**
+ * Sidebar navigation on desktop, a top bar on small screens. On desktop the
+ * content sits in an inset, rounded panel that scrolls on its own.
+ */
 export function AppShell({ children }: { readonly children: ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col md:flex-row">
-      <aside className="sticky top-0 z-30 flex shrink-0 flex-col border-b border-border bg-sidebar md:h-dvh md:w-60 md:border-r md:border-b-0">
+    <div className="flex min-h-dvh flex-col md:h-dvh md:flex-row md:bg-sidebar">
+      <aside className="sticky top-0 z-30 flex shrink-0 flex-col border-b border-border bg-sidebar md:h-dvh md:w-60 md:border-b-0">
         <div className="flex h-14 items-center justify-between gap-2 px-4 md:px-5">
           <Brand />
           <div className="md:hidden">
@@ -47,7 +50,7 @@ export function AppShell({ children }: { readonly children: ReactNode }) {
             <NavLink key={item.to} {...item} />
           ))}
         </nav>
-        <div className="hidden items-center justify-between gap-2 border-t border-border px-3 py-3 md:flex">
+        <div className="hidden items-center justify-between gap-2 px-3 py-3 md:flex">
           <a
             href="/api/docs"
             target="_blank"
@@ -60,7 +63,13 @@ export function AppShell({ children }: { readonly children: ReactNode }) {
           <ThemeMenu />
         </div>
       </aside>
-      <main className="min-w-0 flex-1">{children}</main>
+      <main
+        id="main"
+        data-scroll-restoration-id="main"
+        className="min-w-0 flex-1 md:m-2 md:ml-0 md:overflow-y-auto md:rounded-xl md:border md:border-border md:bg-background md:shadow-sm"
+      >
+        {children}
+      </main>
     </div>
   );
 }
