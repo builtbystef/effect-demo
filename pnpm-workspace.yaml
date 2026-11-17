@@ -17,7 +17,7 @@ catalog:
   effect: ^4.1.2
   "@effect/platform-node": ^4.1.2
   "@effect/sql-pg": ^4.1.2
-  "@effect/atom-react": ^4.1.2
+  "@effect/atom-react": ^4.1.4
 
   # Drizzle 1.0 is a release candidate (its Effect v4 driver is new in 1.0), so
   # pin exact versions and bump the pair together.
